@@ -15,12 +15,13 @@ project.xcworkspace
 
 .svn/
 obj/
-bin/
 build/
 !data/
 
 *.xcodeproj
 *.xcconfig
-config.make
 *.plist
-Makefile
+
+*/image-net-2012.sqlite3
+DoodleTunesTouchscreen/bin/data/image-net-2012.sqlite3
+DoodleTunesCamera/bin/data/image-net-2012.sqlite3

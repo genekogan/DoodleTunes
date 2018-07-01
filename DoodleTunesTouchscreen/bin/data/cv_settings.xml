@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<DoodleClassifier>
+	<circle>0</circle>
+	<Run>1</Run>
+	<CV_initial>
+		<Min_area>31.3061</Min_area>
+		<Max_area>441.444</Max_area>
+		<Threshold>158.724</Threshold>
+		<Dilations>6</Dilations>
+	</CV_initial>
+	<DoodleClassifier />
+	<drums>0</drums>
+</DoodleClassifier>

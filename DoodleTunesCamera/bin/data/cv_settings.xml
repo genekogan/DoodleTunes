@@ -1,0 +1,36 @@
+<DoodleClassifier>
+	<circle>0</circle>
+	<Run>1</Run>
+	<CV_initial>
+		<Min_area>10.5969</Min_area>
+		<Max_area>263.23</Max_area>
+		<Threshold>152.219</Threshold>
+		<Dilations>2</Dilations>
+	<MotionLerp>0.3</MotionLerp>
+		<MinMotion>1.10172</MinMotion>
+		<Motion>1.23007</Motion>
+	<Diff>4.30119</Diff>
+	<Color>13.612</Color>
+	<MinDiff>4.84694</MinDiff>
+	</CV_initial>
+<DoodleClassifier/>
+<drums>0</drums>
+<group>
+		<MotionLerp>0.3</MotionLerp>
+		<MaxMotion>2</MaxMotion>
+		<Motion>1.36061e-19</Motion>
+		<MaxColor>10</MaxColor>
+		<Color>2.33291</Color>
+		<MinDiff>4</MinDiff>
+		<Diff>0</Diff>
+	</group>
+<Motion_settings>
+		<MotionLerp>0.0510204</MotionLerp>
+		<MaxMotion>0.321429</MaxMotion>
+		<Motion>0.530697</Motion>
+		<MaxColor>3.46939</MaxColor>
+		<Color>22.3118</Color>
+		<MinDiff>0.382653</MinDiff>
+		<Diff>11.0981</Diff>
+	</Motion_settings>
+</DoodleClassifier>
