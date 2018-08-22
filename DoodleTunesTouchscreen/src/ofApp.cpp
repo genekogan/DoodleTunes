@@ -92,8 +92,7 @@ void ofApp::setupAudio() {
     cols = 1;
     rows = 4;
     
-    sequencer.setup(cols, 120/8, rows); //columns, bpm, rows
-    sequencer.setBpm(120/8);
+    sequencer.setup(cols, 120/4, rows); //columns, bpm, rows
     sequencer.setMouseActive(false);
     
     drumController.set("drum", 0, 0, 4);
@@ -146,18 +145,99 @@ void ofApp::update(){
 
     if (toUpdateSound) {
         toUpdateSound = false;
-        if (drumController > 0 ) {
-            drum[min(int(drumController), numSamples-1)].play();
+        
+        drumController = min(int(drumController),numSamples-1);
+        bassController = min(int(bassController),numSamples-1);
+        pianoController = min(int(pianoController),numSamples-1);
+        saxController = min(int(saxController),numSamples-1);
+       
+//        if (drumController > 0 ) {
+//            drum[min(int(drumController), numSamples-1)].play();
+//        }
+//        if (bassController > 0 ) {
+//            bass[min(int(bassController), numSamples-1)].play();
+//        }
+//        if (pianoController > 0 ) {
+//            piano[min(int(pianoController), numSamples-1)].play();
+//        }
+//        if (saxController > 0 ) {
+//            sax[min(int(saxController), numSamples-1)].play();
+//        }
+        
+        /////
+        //Drum
+        if (drumController != lastDrumController) { //If there is a change in the occurances of this instrument
+            for (int i = 0; i< numSamples; i++) {
+                drum[i].setVolume(0); //Turn down all existing samples (since they might need to be stopped midway)
+            }
+            if (drumController > 0 ) { //Turn up and play the appropriate sample
+                drum[drumController].play();
+                drum[drumController].setVolume(0.75);
+            }
+            
+        } else if (sequencerCount%2 == 0) { //If there is no change in the number of occurances of this instrument and we hit an even beat
+            if (drumController > 0 ) {
+                drum[drumController].play(); //re-play the appropriate sample
+            }
         }
-        if (bassController > 0 ) {
-            bass[min(int(bassController), numSamples-1)].play();
+        
+        //Bass
+        if (bassController != lastBassController) {
+            for (int i = 0; i< numSamples; i++) {
+                bass[i].setVolume(0);
+            }
+            if (bassController > 0 ) {
+                bass[bassController].play();
+                bass[bassController].setVolume(0.75);
+            }
+            
+        } else if (sequencerCount%2 == 0) {
+            if (bassController > 0 ) {
+                bass[bassController].play();
+            }
         }
-        if (pianoController > 0 ) {
-            piano[min(int(pianoController), numSamples-1)].play();
+        
+        //Piano
+        if (pianoController != lastPianoController) {
+            for (int i = 0; i< numSamples; i++) {
+                piano[i].setVolume(0);
+            }
+            if (pianoController > 0 ) {
+                piano[pianoController].play();
+                piano[pianoController].setVolume(0.75);
+            }
+            
+        } else if (sequencerCount%2 == 0) {
+            if (pianoController > 0 ) {
+                piano[min(int(pianoController), numSamples-1)].play();
+            }
         }
-        if (saxController > 0 ) {
-            sax[min(int(saxController), numSamples-1)].play();
+        
+        //Sax
+        if (saxController != lastSaxController) {
+            for (int i = 0; i< numSamples; i++) {
+                sax[i].setVolume(0);
+            }
+            if (saxController > 0 ) {
+                sax[saxController].play();
+                sax[saxController].setVolume(0.75);
+            }
+            
+        } else if (sequencerCount%2 == 0) {
+            if (saxController > 0 ) {
+                sax[saxController].play();
+            }
         }
+        
+        
+        
+        lastDrumController = drumController;
+        lastBassController = bassController;
+        lastPianoController = pianoController;
+        lastSaxController = saxController;
+        
+        sequencerCount++;
+        
     }
     
     if(drawer.isFrameNew())

@@ -145,6 +145,11 @@ public:
     
     int numSamples;
     int nScreenshots;
+    
+    //Faster playback
+    int lastDrumController, lastBassController, lastPianoController, lastSaxController = 0;
+    long sequencerCount = 0;
+    
 };
 
 
