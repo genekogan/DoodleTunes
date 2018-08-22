@@ -82,6 +82,10 @@ void ofApp::setup() {
         instrumentCountPrev.push_back(0);
         instrumentAreaPrev.push_back(0);
     }
+    
+    // setup clear button
+    bClear.setup("Clear", 10, 10, 200, 80, 48);
+    ofAddListener(ofxCanvasButtonEvent::events, this, &ofApp::buttonEvent);
 
     setupAudio();
     load();
@@ -119,18 +123,24 @@ void ofApp::setupAudio() {
     sax.resize(numSamples);
     
     for (int i = 0; i< numSamples; i++) {
-        drum[i].load("exported_clips_4sec/drum_" + ofToString(i) + ".wav");
+        drum[i].load("sounds/drum_" + ofToString(i) + ".wav");
         drum[i].setVolume(0.75);
         
-        bass[i].load("exported_clips_4sec/bass_" + ofToString(i) + ".wav");
+        bass[i].load("sounds/bass_" + ofToString(i) + ".wav");
         bass[i].setVolume(0.75);
         
-        piano[i].load("exported_clips_4sec/piano_" + ofToString(i) + ".wav");
+        piano[i].load("sounds/piano_" + ofToString(i) + ".wav");
         piano[i].setVolume(0.75);
         
-        sax[i].load("exported_clips_4sec/sax_" + ofToString(i) + ".wav");
+        sax[i].load("sounds/sax_" + ofToString(i) + ".wav");
         sax[i].setVolume(0.75);
     }
+}
+
+//--------------------------------------------------------------
+void ofApp::buttonEvent(ofxCanvasButtonEvent &e) {
+    cout << "HY!"<<endl;
+    clearDrawer();
 }
 
 //--------------------------------------------------------------
@@ -309,6 +319,7 @@ void ofApp::draw(){
         drawDebug();
     } else {
         drawPresent();
+        bClear.draw();
     }
 }
 
@@ -445,7 +456,6 @@ void ofApp::drawDebug(){
 
 //--------------------------------------------------------------
 void ofApp::takeScreenshot() {
-    cout << "TAKE A SCREENSHOT! " << endl;
     ofPixels pix;
     drawer.getCanvas().readToPixels(pix);
     ofImage img;
@@ -477,14 +487,9 @@ void ofApp::gatherFoundSquares(bool augment) {
         foundSquares.push_back(fs);
         
         int n = (augment ? nAugment : 0);
-        cout << "go " << n << endl;
         for (int a=0; a<n; a++) {
             FoundSquare fs1;
             float ang = ofRandom(-maxAng, maxAng);
-            
-            cout << "go " << a << endl;
-            
-            
             
             ofPushMatrix();
             ofFbo fbo;
@@ -506,9 +511,7 @@ void ofApp::gatherFoundSquares(bool augment) {
             fs1.area = contourFinder2.getContourArea(i);
             fs1.img.setFromPixels(pix);
             
-            
             foundSquares.push_back(fs1);
-            
         }
     }
     
@@ -684,8 +687,15 @@ void ofApp::keyPressed(int key){
     if (key=='1') {
         debug = !debug;
     } else if (key=='2') {
-        drawer.clear();
+        clearDrawer();
     }
+}
+
+//--------------------------------------------------------------
+void ofApp::clearDrawer(){
+    drawer.clear();
+    colorImage.clear();
+    grayImage.clear();
 }
 
 //--------------------------------------------------------------
@@ -695,13 +705,14 @@ void ofApp::keyReleased(int key){
 
 //--------------------------------------------------------------
 void ofApp::mouseMoved(int x, int y){
-
+    bClear.mouseMoved(x, y);
 }
 
 //--------------------------------------------------------------
 void ofApp::mouseDragged(int x, int y, int button){
     if (debug) return;
     drawer.mouseDragged(x, y);
+    bClear.mouseDragged(x, y);
 }
 
 //--------------------------------------------------------------
@@ -716,10 +727,12 @@ void ofApp::mouseScrolled(int x, int y, float scrollX, float scrollY){
 void ofApp::mousePressed(int x, int y, int button){
     if (debug) return;
     drawer.mousePressed(x, y);
+    bClear.mousePressed(x, y);
 }
 
 //--------------------------------------------------------------
 void ofApp::mouseReleased(int x, int y, int button){
     if (debug) return;
     drawer.mouseReleased(x, y);
+    bClear.mouseReleased(x, y);
 }

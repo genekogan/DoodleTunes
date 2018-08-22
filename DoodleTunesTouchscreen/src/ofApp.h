@@ -8,7 +8,9 @@
 #include "ofxCcv.h"
 #include "ofxOsc.h"
 #include "ofxSequencer.h"
+#include "ofxCanvasButton.h"
 #include "DrawGui.h"
+#include "AppButton.h"
 
 using namespace ofxCv;
 using namespace cv;
@@ -30,21 +32,30 @@ struct FoundSquare {
 };
 
 
+// wishlist
+// - thread classification
+// - only classify new drawings
+
+
+
 
 // todo
+// - clear button
 // - should update when cv params shifted
-// - retrain + augmentation
+// - clear after clear
+// - turn off osc
+// x retrain + augmentation
 // - combined interface
-// - integrate abletn
+// x integrate abletn
 
-// git
-// - original, shanghai (drawing), nixdorf (touchscreen)
+// x git
+// x original, shanghai (drawing), nixdorf (touchscreen)
 
 
 class ofApp : public ofBaseApp
 {
 public:
-    
+
     vector<string> classNames = {
         "drums",
         "bass guitar",
@@ -68,10 +79,12 @@ public:
     
     void addSamplesToTrainingSetNext();
     void classifyNext();
+    void buttonEvent(ofxCanvasButtonEvent &e);
     void beatsIn(int & eventInt);
     void playbackChange();
     void sendOSC();
     void takeScreenshot();
+    void clearDrawer();
     
     void save();
     void load();
@@ -122,6 +135,7 @@ public:
     DrawGui drawer;
     bool debug;
     float debugScrollY;
+    AppButton bClear;
     
     ////////
     ofxSequencer sequencer;
