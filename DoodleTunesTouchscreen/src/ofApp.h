@@ -66,6 +66,8 @@ public:
     void setup();
     void setupAudio();
     void update();
+    void updateCv();
+    void updateAudio();
     void draw();
     void drawDebug();
     void drawPresent();

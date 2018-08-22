@@ -84,11 +84,11 @@ void ofApp::setup() {
     }
     
     // setup clear button
-    bClear.setup("Clear", 10, 10, 200, 80, 48);
+    bClear.setup("Clear", 10, 10, 200, 64, 36);
     ofAddListener(ofxCanvasButtonEvent::events, this, &ofApp::buttonEvent);
 
     setupAudio();
-    load();
+    //load();
 }
 
 //--------------------------------------------------------------
@@ -139,7 +139,6 @@ void ofApp::setupAudio() {
 
 //--------------------------------------------------------------
 void ofApp::buttonEvent(ofxCanvasButtonEvent &e) {
-    cout << "HY!"<<endl;
     clearDrawer();
 }
 
@@ -155,148 +154,11 @@ void ofApp::update(){
 
     if (toUpdateSound) {
         toUpdateSound = false;
-        
-        drumController = min(int(drumController),numSamples-1);
-        bassController = min(int(bassController),numSamples-1);
-        pianoController = min(int(pianoController),numSamples-1);
-        saxController = min(int(saxController),numSamples-1);
-       
-//        if (drumController > 0 ) {
-//            drum[min(int(drumController), numSamples-1)].play();
-//        }
-//        if (bassController > 0 ) {
-//            bass[min(int(bassController), numSamples-1)].play();
-//        }
-//        if (pianoController > 0 ) {
-//            piano[min(int(pianoController), numSamples-1)].play();
-//        }
-//        if (saxController > 0 ) {
-//            sax[min(int(saxController), numSamples-1)].play();
-//        }
-        
-        /////
-        //Drum
-        if (drumController != lastDrumController) { //If there is a change in the occurances of this instrument
-            for (int i = 0; i< numSamples; i++) {
-                drum[i].setVolume(0); //Turn down all existing samples (since they might need to be stopped midway)
-            }
-            if (drumController > 0 ) { //Turn up and play the appropriate sample
-                drum[drumController].play();
-                drum[drumController].setVolume(0.75);
-            }
-            
-        } else if (sequencerCount%2 == 0) { //If there is no change in the number of occurances of this instrument and we hit an even beat
-            if (drumController > 0 ) {
-                drum[drumController].play(); //re-play the appropriate sample
-            }
-        }
-        
-        //Bass
-        if (bassController != lastBassController) {
-            for (int i = 0; i< numSamples; i++) {
-                bass[i].setVolume(0);
-            }
-            if (bassController > 0 ) {
-                bass[bassController].play();
-                bass[bassController].setVolume(0.75);
-            }
-            
-        } else if (sequencerCount%2 == 0) {
-            if (bassController > 0 ) {
-                bass[bassController].play();
-            }
-        }
-        
-        //Piano
-        if (pianoController != lastPianoController) {
-            for (int i = 0; i< numSamples; i++) {
-                piano[i].setVolume(0);
-            }
-            if (pianoController > 0 ) {
-                piano[pianoController].play();
-                piano[pianoController].setVolume(0.75);
-            }
-            
-        } else if (sequencerCount%2 == 0) {
-            if (pianoController > 0 ) {
-                piano[min(int(pianoController), numSamples-1)].play();
-            }
-        }
-        
-        //Sax
-        if (saxController != lastSaxController) {
-            for (int i = 0; i< numSamples; i++) {
-                sax[i].setVolume(0);
-            }
-            if (saxController > 0 ) {
-                sax[saxController].play();
-                sax[saxController].setVolume(0.75);
-            }
-            
-        } else if (sequencerCount%2 == 0) {
-            if (saxController > 0 ) {
-                sax[saxController].play();
-            }
-        }
-        
-        
-        
-        lastDrumController = drumController;
-        lastBassController = bassController;
-        lastPianoController = pianoController;
-        lastSaxController = saxController;
-        
-        sequencerCount++;
-        
+        updateAudio();
     }
     
-    if(drawer.isFrameNew())
-    {
-        // get grayscale image and threshold
-        ofPixels pix;
-        drawer.getCanvas().readToPixels(pix);
-        colorImage.setFromPixels(pix);       
-        grayImage.setFromColorImage(colorImage);
-        for (int i=0; i<nDilate; i++) {
-            grayImage.erode_3x3();
-        }
-        grayImage.threshold(threshold);
-        grayImage.invert();
-        
-        // find initial contours
-        contourFinder.setMinAreaRadius(minArea);
-        contourFinder.setMaxAreaRadius(maxArea);
-        contourFinder.setThreshold(127);
-        contourFinder.findContours(grayImage);
-        contourFinder.setFindHoles(true);
-        
-        // draw all contour bounding boxes to FBO
-        fbo.begin();
-        ofClear(0, 255);
-        ofFill();
-        ofSetColor(255);
-
-        for (int i=0; i<contourFinder.size(); i++) {
-            //cv::Rect rect = contourFinder.getBoundingRect(i);
-            //ofDrawRectangle(rect.x, rect.y, rect.width, rect.height);
-            ofBeginShape();
-            for (auto p : contourFinder.getContour(i)) {
-                ofVertex(p.x, p.y);
-            }
-            ofPushStyle();
-            ofPopStyle();
-            ofEndShape(OF_CLOSE);
-        }
-        fbo.end();
-        ofPixels pixels;
-        fbo.readToPixels(pixels);
-        
-        // find merged contours
-        contourFinder2.setMinAreaRadius(minArea);
-        contourFinder2.setMaxAreaRadius(maxArea);
-        contourFinder2.setThreshold(127);
-        contourFinder2.findContours(pixels);
-        contourFinder2.setFindHoles(false);
+    if(drawer.isFrameNew()){
+        updateCv();
     }
 
     if (toAddSamples) {
@@ -309,6 +171,137 @@ void ofApp::update(){
         toClassify = false;
     }
     
+}
+
+//--------------------------------------------------------------
+void ofApp::updateCv(){
+    // get grayscale image and threshold
+    ofPixels pix;
+    drawer.getCanvas().readToPixels(pix);
+    colorImage.setFromPixels(pix);
+    grayImage.setFromColorImage(colorImage);
+    for (int i=0; i<nDilate; i++) {
+        grayImage.erode_3x3();
+    }
+    grayImage.threshold(threshold);
+    grayImage.invert();
+    
+    // find initial contours
+    contourFinder.setMinAreaRadius(minArea);
+    contourFinder.setMaxAreaRadius(maxArea);
+    contourFinder.setThreshold(127);
+    contourFinder.findContours(grayImage);
+    contourFinder.setFindHoles(true);
+    
+    // draw all contour bounding boxes to FBO
+    fbo.begin();
+    ofClear(0, 255);
+    ofFill();
+    ofSetColor(255);
+    
+    for (int i=0; i<contourFinder.size(); i++) {
+        //cv::Rect rect = contourFinder.getBoundingRect(i);
+        //ofDrawRectangle(rect.x, rect.y, rect.width, rect.height);
+        ofBeginShape();
+        for (auto p : contourFinder.getContour(i)) {
+            ofVertex(p.x, p.y);
+        }
+        ofPushStyle();
+        ofPopStyle();
+        ofEndShape(OF_CLOSE);
+    }
+    fbo.end();
+    ofPixels pixels;
+    fbo.readToPixels(pixels);
+    
+    // find merged contours
+    contourFinder2.setMinAreaRadius(minArea);
+    contourFinder2.setMaxAreaRadius(maxArea);
+    contourFinder2.setThreshold(127);
+    contourFinder2.findContours(pixels);
+    contourFinder2.setFindHoles(false);
+}
+
+//--------------------------------------------------------------
+void ofApp::updateAudio(){
+    drumController = min(int(drumController),numSamples-1);
+    bassController = min(int(bassController),numSamples-1);
+    pianoController = min(int(pianoController),numSamples-1);
+    saxController = min(int(saxController),numSamples-1);
+    
+    /////
+    //Drum
+    if (drumController != lastDrumController) { //If there is a change in the occurances of this instrument
+        for (int i = 0; i< numSamples; i++) {
+            drum[i].setVolume(0); //Turn down all existing samples (since they might need to be stopped midway)
+        }
+        if (drumController > 0 ) { //Turn up and play the appropriate sample
+            drum[drumController].play();
+            drum[drumController].setVolume(0.75);
+        }
+        
+    } else if (sequencerCount%2 == 0) { //If there is no change in the number of occurances of this instrument and we hit an even beat
+        if (drumController > 0 ) {
+            drum[drumController].play(); //re-play the appropriate sample
+        }
+    }
+    
+    //Bass
+    if (bassController != lastBassController) {
+        for (int i = 0; i< numSamples; i++) {
+            bass[i].setVolume(0);
+        }
+        if (bassController > 0 ) {
+            bass[bassController].play();
+            bass[bassController].setVolume(0.75);
+        }
+        
+    } else if (sequencerCount%2 == 0) {
+        if (bassController > 0 ) {
+            bass[bassController].play();
+        }
+    }
+    
+    //Piano
+    if (pianoController != lastPianoController) {
+        for (int i = 0; i< numSamples; i++) {
+            piano[i].setVolume(0);
+        }
+        if (pianoController > 0 ) {
+            piano[pianoController].play();
+            piano[pianoController].setVolume(0.75);
+        }
+        
+    } else if (sequencerCount%2 == 0) {
+        if (pianoController > 0 ) {
+            piano[min(int(pianoController), numSamples-1)].play();
+        }
+    }
+    
+    //Sax
+    if (saxController != lastSaxController) {
+        for (int i = 0; i< numSamples; i++) {
+            sax[i].setVolume(0);
+        }
+        if (saxController > 0 ) {
+            sax[saxController].play();
+            sax[saxController].setVolume(0.75);
+        }
+        
+    } else if (sequencerCount%2 == 0) {
+        if (saxController > 0 ) {
+            sax[saxController].play();
+        }
+    }
+    
+    
+    
+    lastDrumController = drumController;
+    lastBassController = bassController;
+    lastPianoController = pianoController;
+    lastSaxController = saxController;
+    
+    sequencerCount++;
 }
 
 //--------------------------------------------------------------
@@ -694,8 +687,7 @@ void ofApp::keyPressed(int key){
 //--------------------------------------------------------------
 void ofApp::clearDrawer(){
     drawer.clear();
-    colorImage.clear();
-    grayImage.clear();
+    updateCv();
 }
 
 //--------------------------------------------------------------

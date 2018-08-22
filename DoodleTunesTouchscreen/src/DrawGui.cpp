@@ -151,5 +151,4 @@ void DrawGui::mouseReleased(int x, int y){
     updateCanvas();
     releaseT = ofGetElapsedTimef();
     hasReleased = true;
-    cout << "GO!!!" << endl;
 }
