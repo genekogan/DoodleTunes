@@ -25,7 +25,8 @@ struct FoundSquare {
     bool isPrediction = false;
     cv::Rect rect;
     float area;
-    void draw();
+    void draw(int w, int h, bool classLabel, bool metaLabel);
+    void draw() {draw(img.getWidth(), img.getHeight(), true, true);}
 };
 
 
@@ -61,7 +62,7 @@ public:
     
     void setTrainingLabel(int & label_);
     void addSamplesToTrainingSet();
-    void gatherFoundSquares();
+    void gatherFoundSquares(bool augment);
     void trainClassifier();
     void classifyCurrentSamples();
     
@@ -70,6 +71,7 @@ public:
     void beatsIn(int & eventInt);
     void playbackChange();
     void sendOSC();
+    void takeScreenshot();
     
     void save();
     void load();
@@ -77,6 +79,7 @@ public:
     void keyPressed(int key);
     void keyReleased(int key);
     void mouseMoved(int x, int y);
+    void mouseScrolled(int x, int y, float scrollX, float scrollY);
     void mouseDragged(int x, int y, int button);
     void mousePressed(int x, int y, int button);
     void mouseReleased(int x, int y, int button);
@@ -111,21 +114,18 @@ public:
     GestureRecognitionPipeline pipeline;
     ofxCcv ccv;
     bool isTrained, toAddSamples, toClassify;
+    bool flipH = true;
+    int nAugment = 4;
+    float maxAng = 20;
     
     // interface
     DrawGui drawer;
     bool debug;
-    
-    
-    
-    
-    bool toUpdateSound;
-    
-    
+    float debugScrollY;
     
     ////////
     ofxSequencer sequencer;
-    
+    bool toUpdateSound;
     ofParameter<int> drumController;
     ofParameter<int> bassController;
     ofParameter<int> pianoController;
@@ -144,7 +144,7 @@ public:
     vector <ofSoundPlayer>  sax;
     
     int numSamples;
-    
+    int nScreenshots;
 };
 
 

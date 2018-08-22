@@ -1,4 +1,5 @@
 ofxAbletonLive
+ofxCanvas
 ofxCcv
 ofxCv
 ofxGrt

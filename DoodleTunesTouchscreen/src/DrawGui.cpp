@@ -15,25 +15,25 @@ void DrawGui::setup(int width, int height) {
     canvas.allocate(settings);
     //canvas.allocate(width, height);
     
-    ofPushMatrix();
-    ofPushStyle();
-    
-    canvas.begin();
-    
-    ofFill();
-    ofSetColor(255);
-    ofDrawRectangle(0, 0, width, height);
-    
-    canvas.end();
-    
-    ofPopMatrix();
-    ofPopStyle();
+    clear();
     
     changed = false;
     toClassify = false;
+    hasReleased = false;
 }
 
 void DrawGui::update() {
+    if (hasReleased) {
+        float waitingTime = ofGetElapsedTimef()-releaseT;
+        if (waitingTime > timeOut) {
+            toClassify = true;
+            points.clear();
+            hasReleased = false;
+        }
+    }
+}
+        
+void DrawGui::updateCanvas() {
     canvas.begin();
     
     ofSetColor(0);
@@ -46,6 +46,24 @@ void DrawGui::update() {
     ofEndShape();
     
     canvas.end();
+}
+
+//--------------------------------------------------------------
+void DrawGui::clear(){
+    
+    ofPushMatrix();
+    ofPushStyle();
+    
+    canvas.begin();
+    
+    ofFill();
+    ofSetColor(255);
+    ofDrawRectangle(0, 0, canvas.getWidth(), canvas.getHeight());
+    
+    canvas.end();
+
+    ofPopMatrix();
+    ofPopStyle();
 }
 
 //--------------------------------------------------------------
@@ -81,6 +99,8 @@ void DrawGui::mouseDragged(int x, int y){
     float y1 = ofGetPreviousMouseY()-y0;
     float x2 = ofGetMouseX()-x0;
     float y2 = ofGetMouseY()-y0;
+    
+    releaseT = ofGetElapsedTimef();
     
     // when should this change
     changed = true;
@@ -128,7 +148,8 @@ void DrawGui::mousePressed(int x, int y){
 
 //--------------------------------------------------------------
 void DrawGui::mouseReleased(int x, int y){
-    update();
-    toClassify = true;
-    points.clear();
+    updateCanvas();
+    releaseT = ofGetElapsedTimef();
+    hasReleased = true;
+    cout << "GO!!!" << endl;
 }
