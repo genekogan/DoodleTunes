@@ -189,9 +189,7 @@ void ofApp::beatsIn(int & eventInt){
 
 //--------------------------------------------------------------
 void ofApp::update(){
-    
     clearDeadSquares();
-    
     
     ofSoundUpdate();
     ccv.update();

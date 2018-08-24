@@ -24,25 +24,13 @@ using namespace cv;
 #define OSC_ENABLED false
 
 
-
-// wishlist
-// - thread classification
-// - only classify new drawings
-
-
-
-
-// todo
-// - clear button
+////// TODO
+// - classify as blocks are added, not on mouseup
+// - presentation view: margins, 1920, load on start
+// - clear button top right
+// - idle screen + timeout
 // - should update when cv params shifted
-// - clear after clear
-// - turn off osc
-// x retrain + augmentation
-// - combined interface
-// x integrate abletn
 
-// x git
-// x original, shanghai (drawing), nixdorf (touchscreen)
 
 
 class ofApp : public ofBaseApp
