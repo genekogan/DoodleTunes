@@ -61,7 +61,7 @@ public:
     
     void setTrainingLabel(int & label_);
     void addSamplesToTrainingSet();
-    void gatherFoundSquares(bool augment);
+    void gatherFoundSquares();
     void trainClassifier();
     void classifyCurrentSamples();
     void updateInstruments();
@@ -112,8 +112,8 @@ public:
     map<int, FoundSquare*> foundSquares;
     bool isTrained, toAddSamples, toClassify;
     bool flipH = true;
-    int nAugment = 4;
-    float maxAng = 20;
+    ofParameter<int> nAugment;
+    ofParameter<float> maxAng;
     
     // interface
     DrawGui drawer;

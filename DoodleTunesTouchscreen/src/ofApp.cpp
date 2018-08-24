@@ -13,7 +13,7 @@ FoundSquare::FoundSquare() {
 void FoundSquare::draw(int w, int h, bool classLabel, bool metaLabel) {
     borderColor = ofLerp(borderColor, 255, 0.033);
     string labelStr = "no class";
-    labelStr = ofToString(idxLabel) + " (id: "+ofToString(trackerLabel)+", diff "+ofToString(change)+") act"+ofToString(active?"1":"0");
+    labelStr = ofToString(label) + " (id: "+ofToString(trackerLabel)+", diff "+ofToString(change)+") act"+ofToString(active?"1":"0");
     img.draw(0, 0, w, h);
     if (borderColor < 254) {
         ofPushStyle();
@@ -64,7 +64,7 @@ void ofApp::setup() {
 
     // setup drawer and ccv
     drawer.setup(width, height);
-    ccv.setup(ofToDataPath("image-net-2012.sqlite3"));
+    ccv.setup(ofToDataPath("image-net-2012.sqlite3"), &foundSquares);
     
     // events
     bAdd.addListener(this, &ofApp::addSamplesToTrainingSetNext);
@@ -93,6 +93,8 @@ void ofApp::setup() {
     gCv.add(nDilate.set("Dilations", 1, 0, 8));
     gCv.add(drawer.timeOut.set("timeOut", 0.5, 0.001, 2.0));
     gui.add(trainingLabel.set("Training Label", 0, 0, classNames.size()-1));
+    gui.add(nAugment.set("augment N", 4, 0, 10));
+    gui.add(maxAng.set("augmentation maxAng", 20, 0, 45));
     gui.add(bAdd.setup("Add samples"));
     gui.add(bTrain.setup("Train"));
     gui.add(bRunning.setup("Run", false));
@@ -100,8 +102,9 @@ void ofApp::setup() {
     gui.add(bSave.setup("Save"));
     gui.add(bLoad.setup("Load"));
     gui.add(gCv);
-    gui.setPosition(0, 400);
+    gui.setPosition(0, 560);
     gui.loadFromFile("cv_settings.xml");
+    bRunning = false;
     
     // cv stuff
     fbo.allocate(width, height);
@@ -125,7 +128,7 @@ void ofApp::setup() {
 
     // initializ
     setupAudio();
-    load();
+//    load();
 }
 
 //--------------------------------------------------------------
@@ -187,37 +190,41 @@ void ofApp::beatsIn(int & eventInt){
 //--------------------------------------------------------------
 void ofApp::update(){
     
-
+    clearDeadSquares();
+    
+    
     ofSoundUpdate();
     ccv.update();
     drawer.update();
     
-
     if(drawer.isFrameNew()){
         updateCv();
+//        if (!ccv.getIsPredicting()) {
+//            clearDeadSquares();
+//        }
     }
-
     
-    /// NEEDS FIX
+    // add to training set
     if (toAddSamples) {
-        //addSamplesToTrainingSet();
+        gatherFoundSquares();
+        addSamplesToTrainingSet();
         toAddSamples = false;
     }
     
     // update instruments
     if (ccv.getHasResults()){
         updateInstruments();
-        clearDeadSquares();
         ccv.resetResults();
     }
 
     // classify next
     if (bRunning && ccv.getIsTrained() && !ccv.getIsPredicting() && drawer.isShapeNew()) {
+        gatherFoundSquares();
         classifyCurrentSamples();
         toClassify = false;
     }
 
-    // update audi
+    // update audio
     if (toUpdateSound) {
         toUpdateSound = false;
         updateAudio();
@@ -515,7 +522,6 @@ void ofApp::drawDebug(){
     float w = 226;
     int nx = int(dispW / w);
     
-    
     int i=0;
     for (map<int, FoundSquare*>::iterator it = foundSquares.begin(); it != foundSquares.end(); it++) {
         float x = w * (i % nx);
@@ -528,16 +534,6 @@ void ofApp::drawDebug(){
         i++;
     }
     
-    /*
-    for (int i=0; i<foundSquares.size(); i++) {
-        float x = w * (i % nx);
-        float y = w * int(i/nx);
-
-        ofPushMatrix();
-        ofTranslate(x, y);
-        foundSquares[i].draw(int(w-2), int(w-2), bRunning, false);
-        ofPopMatrix();
-    }*/
     ofPopMatrix();
     ofPopStyle();
     
@@ -563,7 +559,7 @@ void ofApp::exit() {
 }
 
 //--------------------------------------------------------------
-void ofApp::gatherFoundSquares(bool augment) {
+void ofApp::gatherFoundSquares() {
     if (ccv.getIsPredicting()) {
         return;
     }
@@ -596,85 +592,26 @@ void ofApp::gatherFoundSquares(bool augment) {
         fs->rect = contourFinder2.getBoundingRect(i);
         fs->area = contourFinder2.getContourArea(i);
         
-        float cx = fs->rect.x-5;
-        float cy = fs->rect.y-5;
-        float cw = fs->rect.width+10;
-        float ch = fs->rect.height+10;
-        //        float cx = max(0.0f, (float) fs.rect.x-5.0f);
-        //        float cy = max(0.0f, (float) fs.rect.y-5.0f);
-        //        float cw = min(fs.img.getWidth()-1.0f-cx, (float) fs.rect.width+10.0f);
-        //        float ch = min(fs.img.getWidth()-1.0f-cy, (float) fs.rect.height+10.0f);
+        if (!bRunning || !ccv.getIsTrained()) {
+            fs->idxLabel = trainingLabel;
+            fs->label = classNames[trainingLabel];
+        }
         
-        fs->updateImage(pix, cx, cy, cw, ch);
-        
+        float cx = max(0.0f, (float) fs->rect.x-5.0f);
+        float cy = max(0.0f, (float) fs->rect.y-5.0f);
+        float cw = min(pix.getWidth()-1.0f-cx, (float) fs->rect.width+10.0f);
+        float ch = min(pix.getHeight()-1.0f-cy, (float) fs->rect.height+10.0f);
 
-        /*
-        
-        foundSquares.push_back(fs);
-        
-        int n = (augment ? nAugment : 0);
-        for (int a=0; a<n; a++) {
-            FoundSquare fs1;
-            float ang = ofRandom(-maxAng, maxAng);
-            
-            ofPushMatrix();
-            ofFbo fbo;
-            fbo.allocate(fs.img.getWidth(), fs.img.getHeight());
-            fbo.begin();
-            ofSetColor(255);
-            ofFill();
-            ofDrawRectangle(0, 0, fbo.getWidth(), fbo.getHeight());
-            ofSetRectMode(OF_RECTMODE_CENTER);
-            ofTranslate(fbo.getWidth()/2, fbo.getHeight()/2);
-            ofRotateDeg(ang);
-            ofScale(ofMap(abs(ang), 0, maxAng, 1, 0.95));
-            fs.img.draw(0, 0, fbo.getWidth(), fbo.getHeight());
-            fbo.end();
-            ofPopMatrix();
-            
-            fbo.readToPixels(pix);
-            fs1.rect = contourFinder2.getBoundingRect(i);
-            fs1.area = contourFinder2.getContourArea(i);
-            fs1.img.setFromPixels(pix);
-            
-            foundSquares.push_back(fs1);
-        }
-        
-        */
-        
-        
+        fs->updateImage(pix, cx, cy, cw, ch);
     }
-    
-    /*
-    if (flipH && augment) {
-        vector<FoundSquare> mirrorFoundSquares;
-        for (int i=0; i<foundSquares.size(); i++) {
-            FoundSquare fs = foundSquares[i];
-            fs.img.mirror(false, true);
-            mirrorFoundSquares.push_back(fs);
-        }
-        for (auto f : mirrorFoundSquares) {
-            foundSquares.push_back(f);
-        }
-    }
-     */
 }
 
 //--------------------------------------------------------------
 void ofApp::addSamplesToTrainingSet() {
-    /*
     ofLog(OF_LOG_NOTICE, "Adding samples...");
-    gatherFoundSquares(true);
-    for (int i=0; i<foundSquares.size(); i++) {
-        foundSquares[i].label = classNames[trainingLabel];
-        vector<float> encoding = ccv.encode(foundSquares[i].img, ccv.numLayers()-1);
-        VectorFloat inputVector(encoding.size());
-        for (int i=0; i<encoding.size(); i++) inputVector[i] = encoding[i];
-        trainingData.addSample(trainingLabel, inputVector);
-        ofLog(OF_LOG_NOTICE, " Added sample #"+ofToString(i)+" label="+ofToString(trainingLabel));
-    }
+    //gatherFoundSquares();
+    ccv.addSamples(nAugment, maxAng, flipH);
     takeScreenshot();
-     */
 }
 
 //--------------------------------------------------------------
@@ -685,8 +622,7 @@ void ofApp::trainClassifier() {
 //--------------------------------------------------------------
 void ofApp::classifyCurrentSamples() {
     ofLog(OF_LOG_NOTICE, "Classifiying on frame "+ofToString(ofGetFrameNum()));
-    gatherFoundSquares(false);
-    ccv.sendFoundSquares(&foundSquares);
+    ccv.predict();
 }
 
 //--------------------------------------------------------------
@@ -785,6 +721,7 @@ void ofApp::save() {
 //--------------------------------------------------------------
 void ofApp::load() {
     ccv.load();
+    bRunning = true;
 }
 
 //--------------------------------------------------------------
@@ -810,6 +747,9 @@ void ofApp::keyPressed(int key){
 void ofApp::clearDrawer(){
     drawer.clear();
     updateCv();
+    gatherFoundSquares();
+    clearDeadSquares();
+    updateInstruments();
 }
 
 //--------------------------------------------------------------
@@ -832,7 +772,7 @@ void ofApp::mouseDragged(int x, int y, int button){
 //--------------------------------------------------------------
 void ofApp::mouseScrolled(int x, int y, float scrollX, float scrollY){
     if (debug) {
-        debugScrollY = ofClamp(debugScrollY - 10*scrollY, -1000, 1000);
+        debugScrollY = ofClamp(debugScrollY - 10*scrollY, -2000, 2000);
         return;
     }
 }

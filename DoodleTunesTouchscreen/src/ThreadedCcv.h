@@ -10,20 +10,19 @@
 class ThreadedCcv: public ofThread {
 public:
     ~ThreadedCcv();
-    void setup(string ccvPath);
     
+    void setup(string ccvPath, map<int, FoundSquare*> * foundSquares);
+    void update();
+    
+    void addSamples(int nAugment, float maxAng, bool flipH);
     void trainClassifier();
     void predict();
-    
-    void sendFoundSquares(map<int, FoundSquare*> * foundSquares);
     
     bool getIsTrained(){return isTrained;}
     bool getIsPredicting(){return toPredict;}
     bool getHasResults(){return hasResults;}
     void resetResults(){hasResults = false;}
     
-    void update();
-    void threadedFunction();
     void start();
     void stop();
     
@@ -31,6 +30,10 @@ public:
     void load();
     
 protected:
+    
+    void addSample(vector<float> & encoding, int label);
+    void runPredictions();
+    void threadedFunction();
     
     std::condition_variable condition;
     map<int, FoundSquare*> *foundSquares;

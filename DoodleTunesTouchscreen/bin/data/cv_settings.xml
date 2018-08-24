@@ -7,10 +7,13 @@
 		<Max_area>441.444</Max_area>
 		<Threshold>158.724</Threshold>
 		<Dilations>6</Dilations>
-		<timeOut>1.54105</timeOut>
+		<timeOut>0.592541</timeOut>
 	</CV_initial>
 	<DoodleClassifier />
 	<drums>0</drums>
 	<keyboard>3</keyboard>
 	<bass_guitar>1</bass_guitar>
+	<augment_N>3</augment_N>
+	<augmentation_maxAng>20</augmentation_maxAng>
+	<saxophone>2</saxophone>
 </DoodleClassifier>

@@ -13,7 +13,6 @@ void DrawGui::setup(int width, int height) {
     settings.numSamples = 1;
     
     canvas.allocate(settings);
-    //canvas.allocate(width, height);
     
     clear();
     
@@ -76,22 +75,8 @@ void DrawGui::draw(){
     ofSetColor(255);
     canvas.draw(x0, y0);
 
-//
-//    ofPushMatrix();
-//    ofTranslate(100, 100);
-//    ofSetColor(0);
-//    ofSetLineWidth(8);
-//    ofBeginShape();
-//    ofNoFill();
-////    for (int p=0; p<points.size(); p+=10) {
-////        ofCurveVertex(points[p].x, points[p].y);
-////    }
-//    ofEndShape();
-//    ofPopMatrix();
-    
     ofPopMatrix();
     ofPopStyle();
-    
 }
 
 

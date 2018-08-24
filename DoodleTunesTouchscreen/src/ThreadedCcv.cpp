@@ -8,7 +8,9 @@ ThreadedCcv::~ThreadedCcv(){
 }
 
 //--------------------------------------------------------------
-void ThreadedCcv::setup(string ccvPath){
+void ThreadedCcv::setup(string ccvPath, map<int, FoundSquare*> * foundSquares){
+    this->foundSquares = foundSquares;
+
     toPredict = false;
     hasResults = false;
     isPredicting = false;
@@ -46,13 +48,73 @@ void ThreadedCcv::update(){
 }
 
 //--------------------------------------------------------------
-void ThreadedCcv::sendFoundSquares(map<int, FoundSquare*> * foundSquares) {
+void ThreadedCcv::predict() {
     if (!isTrained) {
         ofLog() << "Not trained yet... go away";
         return;
     }
-    this->foundSquares = foundSquares;
     toPredict = true;
+}
+
+//--------------------------------------------------------------
+void ThreadedCcv::addSample(vector<float> & encoding, int label) {
+    VectorFloat inputVector(encoding.size());
+    for (int i=0; i<encoding.size(); i++) inputVector[i] = encoding[i];
+    trainingData.addSample(label, inputVector);
+}
+
+//--------------------------------------------------------------
+void ThreadedCcv::addSamples(int nAugment, float maxAng, bool flipH) {
+    ofLog(OF_LOG_NOTICE, "Adding samples...");
+    
+    ofImage img;
+    int numSamples = foundSquares->size() * (1 + nAugment) * (flipH ? 2 : 1);
+    int idx = 0;
+    for (map<int, FoundSquare*>::iterator it = foundSquares->begin(); it != foundSquares->end(); it++) {
+        vector<float> encoding = ccv.encode(it->second->img, ccv.numLayers()-1);
+        int label = it->second->idxLabel;
+        addSample(encoding, label);
+        ofLog(OF_LOG_NOTICE, " Added sample #"+ofToString(++idx)+"/"+ofToString(numSamples)+", label="+ofToString(label));
+        
+        if (flipH) {
+            ofImage imgFlipped;
+            imgFlipped.setFromPixels(it->second->img);
+            imgFlipped.mirror(false, true);
+            encoding = ccv.encode(imgFlipped, ccv.numLayers()-1);
+            addSample(encoding, label);
+            ofLog(OF_LOG_NOTICE, " Added sample #"+ofToString(++idx)+"/"+ofToString(numSamples)+", label="+ofToString(label));
+        }
+
+        for (int a=0; a<nAugment; a++) {
+            float ang = ofRandom(-maxAng, maxAng);
+            ofPushMatrix();
+            ofFbo fbo;
+            fbo.allocate(it->second->img.getWidth(), it->second->img.getHeight());
+            fbo.begin();
+            ofSetColor(255);
+            ofFill();
+            ofDrawRectangle(0, 0, fbo.getWidth(), fbo.getHeight());
+            ofSetRectMode(OF_RECTMODE_CENTER);
+            ofTranslate(fbo.getWidth()/2, fbo.getHeight()/2);
+            ofRotateDeg(ang);
+            ofScale(ofMap(abs(ang), 0, maxAng, 1, 0.95));
+            it->second->draw(0, 0, fbo.getWidth(), fbo.getHeight());
+            fbo.end();
+            ofPopMatrix();
+
+            fbo.readToPixels(img.getPixels());
+            encoding = ccv.encode(img, ccv.numLayers()-1);
+            addSample(encoding, label);
+            ofLog(OF_LOG_NOTICE, " Added sample #"+ofToString(++idx)+"/"+ofToString(numSamples)+", label="+ofToString(label));
+            
+            if (flipH) {
+                img.mirror(false, true);
+                encoding = ccv.encode(img, ccv.numLayers()-1);
+                addSample(encoding, label);
+                ofLog(OF_LOG_NOTICE, " Added sample #"+ofToString(++idx)+"/"+ofToString(numSamples)+", label="+ofToString(label));
+            }
+        }
+    }
 }
 
 //--------------------------------------------------------------
@@ -66,15 +128,15 @@ void ThreadedCcv::trainClassifier() {
 }
 
 //--------------------------------------------------------------
-void ThreadedCcv::predict() {
+void ThreadedCcv::runPredictions() {
     isPredicting = true;
-    ofLog(OF_LOG_NOTICE, "Classifiying "+ofToString(ofGetFrameNum()));
     
-    int i = 0;
     for (map<int, FoundSquare*>::iterator it = foundSquares->begin(); it != foundSquares->end(); it++) {
         if (it->second->change < 1.0 && it->second->idxLabel > -1) {
+            cout << "no dont go here " << endl;
             continue;
         }
+        cout << "lets predict " << endl;
         vector<float> encoding = ccv.encode(it->second->img, ccv.numLayers()-1);
         VectorFloat inputVector(encoding.size());
         for (int i=0; i<encoding.size(); i++) inputVector[i] = encoding[i];
@@ -82,8 +144,10 @@ void ThreadedCcv::predict() {
             int label = pipeline.getPredictedClassLabel();
             it->second->label = classNames[label];
             it->second->idxLabel = label;
+            cout << " predicted " << label << endl;
             it->second->borderColor = 0;
         }
+        cout << "done " << endl;
     }
     hasResults = true;
     isPredicting = false;
@@ -94,7 +158,7 @@ void ThreadedCcv::threadedFunction(){
     while(isThreadRunning()){
         std::unique_lock<std::mutex> lock(mutex);
         if (toPredict) {
-            predict();
+            runPredictions();
             toPredict = false;
         }
         condition.wait(lock);
