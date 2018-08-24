@@ -64,6 +64,8 @@ void DrawGui::clear(){
 
     ofPopMatrix();
     ofPopStyle();
+    
+    changed = true;
 }
 
 //--------------------------------------------------------------

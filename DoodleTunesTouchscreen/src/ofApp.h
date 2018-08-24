@@ -9,6 +9,8 @@
 #include "ofxOsc.h"
 #include "ofxSequencer.h"
 #include "ofxCanvasButton.h"
+#include "FoundSquare.h"
+#include "ThreadedCcv.h"
 #include "DrawGui.h"
 #include "AppButton.h"
 
@@ -19,17 +21,8 @@ using namespace cv;
 #define DEFAULT_OSC_DESTINATION "localhost"
 #define DEFAULT_OSC_ADDRESS "/classification"
 #define DEFAULT_OSC_PORT 9000
+#define OSC_ENABLED false
 
-// instrument names
-struct FoundSquare {
-    ofImage img;
-    string label;
-    bool isPrediction = false;
-    cv::Rect rect;
-    float area;
-    void draw(int w, int h, bool classLabel, bool metaLabel);
-    void draw() {draw(img.getWidth(), img.getHeight(), true, true);}
-};
 
 
 // wishlist
@@ -56,13 +49,6 @@ class ofApp : public ofBaseApp
 {
 public:
 
-    vector<string> classNames = {
-        "drums",
-        "bass guitar",
-        "saxophone",
-        "keyboard"
-    };
-    
     void setup();
     void setupAudio();
     void update();
@@ -78,10 +64,12 @@ public:
     void gatherFoundSquares(bool augment);
     void trainClassifier();
     void classifyCurrentSamples();
-    
+    void updateInstruments();
+    void clearDeadSquares();
+
     void addSamplesToTrainingSetNext();
     void classifyNext();
-    void buttonEvent(ofxCanvasButtonEvent &e);
+    void clearButtonClicked();
     void beatsIn(int & eventInt);
     void playbackChange();
     void sendOSC();
@@ -99,18 +87,19 @@ public:
     void mousePressed(int x, int y, int button);
     void mouseReleased(int x, int y, int button);
     
-    int width, height;
     
-    //ofVideoGrabber cam;
+    // cv
     ContourFinder contourFinder, contourFinder2;
     ofFbo fbo;
     ofxCvGrayscaleImage grayImage;
     ofxCvColorImage colorImage;
     
+    // osc
     ofxOscSender sender;
     string oscDestination, oscAddress;
     int oscPort;
     
+    // gui
     ofxPanel gui;
     ofxToggle bRunning;
     ofxButton bAdd, bTrain, bClassify, bSave, bLoad;
@@ -118,16 +107,9 @@ public:
     ofParameter<int> nDilate;
     ofParameter<int> trainingLabel;
     
-    // music stuff
-    int nInstruments;
-    vector<FoundSquare> foundSquares;
-    vector<int> instrumentCountPrev, instrumentCount;
-    vector<float> instrumentAreaPrev, instrumentArea;
-    
     // training
-    ClassificationData trainingData;
-    GestureRecognitionPipeline pipeline;
-    ofxCcv ccv;
+    ThreadedCcv ccv;
+    map<int, FoundSquare*> foundSquares;
     bool isTrained, toAddSamples, toClassify;
     bool flipH = true;
     int nAugment = 4;
@@ -138,34 +120,32 @@ public:
     bool debug;
     float debugScrollY;
     AppButton bClear;
+    int width, height;
     
-    ////////
+    // music stuff
     ofxSequencer sequencer;
     bool toUpdateSound;
     ofParameter<int> drumController;
     ofParameter<int> bassController;
     ofParameter<int> pianoController;
     ofParameter<int> saxController;
+    int nInstruments;
     
-    int cols;
-    int rows;
-    
-    ofEvent <int> beatEvent;
+    // SoundPlayer
+    ofEvent<int> beatEvent;
     string displayString;
-    
-    //SoundPlayer
     vector <ofSoundPlayer>  drum;
     vector <ofSoundPlayer>  bass;
     vector <ofSoundPlayer>  piano;
     vector <ofSoundPlayer>  sax;
-    
+    vector<int> instrumentCountPrev, instrumentCount;
+    vector<float> instrumentAreaPrev, instrumentArea;
     int numSamples;
     int nScreenshots;
-    
-    //Faster playback
     int lastDrumController, lastBassController, lastPianoController, lastSaxController = 0;
     long sequencerCount = 0;
-    
+    int cols;
+    int rows;
 };
 
 

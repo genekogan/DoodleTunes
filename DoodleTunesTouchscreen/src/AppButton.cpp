@@ -1,6 +1,7 @@
 #include "AppButton.h"
 
-//#include "ofxCanvasButton.h"
+//--------------------------------------------------------------
+ofEvent<void> AppButton::buttonClickedEvent = ofEvent<void>();
 
 //--------------------------------------------------------------
 AppButton::AppButton() {
@@ -38,17 +39,10 @@ void AppButton::mousePressed(int x, int y){
 void AppButton::mouseReleased(int x, int y){
     if (isPressed) {
         isPressed = false;
-    }
-}
-/*
-//--------------------------------------------------------------
-void ofxCanvasButton::mouseReleased(int x, int y){
-    if (isPressed) {
-        isPressed = false;
         buttonClicked();
     }
 }
-*/
+
 //--------------------------------------------------------------
 void AppButton::draw(){
     ofPushStyle();
@@ -70,7 +64,6 @@ void AppButton::draw(){
 
 //--------------------------------------------------------------
 void AppButton::buttonClicked() {
-    //static ofxCanvasButtonEvent newEvent;
-    //ofNotifyEvent(ofxCanvasButtonEvent::events, newEvent);
+    ofNotifyEvent(buttonClickedEvent);
 }
 
