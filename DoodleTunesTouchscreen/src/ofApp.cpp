@@ -54,8 +54,7 @@ void ofApp::setup() {
 //    ofSetWindowShape(1920, 1080);
     ofSetFullscreen(true);
     
-    //width = 1280;
-    width = 1000;
+    width = 1280;
     height = 900;
     
     debug = false;

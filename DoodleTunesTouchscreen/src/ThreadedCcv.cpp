@@ -133,10 +133,8 @@ void ThreadedCcv::runPredictions() {
     
     for (map<int, FoundSquare*>::iterator it = foundSquares->begin(); it != foundSquares->end(); it++) {
         if (it->second->change < 1.0 && it->second->idxLabel > -1) {
-            cout << "no dont go here " << endl;
             continue;
         }
-        cout << "lets predict " << endl;
         vector<float> encoding = ccv.encode(it->second->img, ccv.numLayers()-1);
         VectorFloat inputVector(encoding.size());
         for (int i=0; i<encoding.size(); i++) inputVector[i] = encoding[i];
@@ -144,10 +142,8 @@ void ThreadedCcv::runPredictions() {
             int label = pipeline.getPredictedClassLabel();
             it->second->label = classNames[label];
             it->second->idxLabel = label;
-            cout << " predicted " << label << endl;
             it->second->borderColor = 0;
         }
-        cout << "done " << endl;
     }
     hasResults = true;
     isPredicting = false;
