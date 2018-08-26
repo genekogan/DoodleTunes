@@ -13,7 +13,8 @@ FoundSquare::FoundSquare() {
 void FoundSquare::draw(int w, int h, bool classLabel, bool metaLabel) {
     borderColor = ofLerp(borderColor, 255, 0.033);
     string labelStr = "no class";
-    labelStr = ofToString(label) + " (id: "+ofToString(trackerLabel)+", diff "+ofToString(change)+") act"+ofToString(active?"1":"0");
+   	//labelStr = ofToString(label) + " (id: "+ofToString(trackerLabel)+", diff "+ofToString(change)+") act"+ofToString(active?"1":"0");
+    labelStr = ofToString(label);
     img.draw(0, 0, w, h);
     if (borderColor < 254) {
         ofPushStyle();
