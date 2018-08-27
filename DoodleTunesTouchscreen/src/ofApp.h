@@ -39,13 +39,16 @@ public:
 
     void setup();
     void setupAudio();
+    void exit();
+    
     void update();
     void updateCv();
     void updateAudio();
+    void checkIdle();
+    
     void draw();
     void drawDebug();
     void drawPresent();
-    void exit();
     
     void setTrainingLabel(int & label_);
     void addSamplesToTrainingSet();
@@ -54,19 +57,18 @@ public:
     void classifyCurrentSamples();
     void updateInstruments();
     void clearDeadSquares();
-
     void addSamplesToTrainingSetNext();
     void classifyNext();
     void clearButtonClicked();
     void beatsIn(int & eventInt);
     void playbackChange();
     void sendOSC();
-    void takeScreenshot();
     void clearDrawer();
     
     void save();
     void load();
-    
+    void takeScreenshot();
+
     void keyPressed(int key);
     void keyReleased(int key);
     void mouseMoved(int x, int y);
@@ -134,6 +136,12 @@ public:
     long sequencerCount = 0;
     int cols;
     int rows;
+    
+    // idle
+    ofParameter<float> idleLength;
+    ofParameter<bool> idle;
+    float idleTime;
+    ofImage idleScreen;
 };
 
 

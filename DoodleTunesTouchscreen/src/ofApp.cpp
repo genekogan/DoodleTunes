@@ -94,6 +94,8 @@ void ofApp::setup() {
     gui.add(trainingLabel.set("Training Label", 0, 0, classNames.size()-1));
     gui.add(nAugment.set("augment N", 4, 0, 10));
     gui.add(maxAng.set("augmentation maxAng", 20, 0, 45));
+    gui.add(idleLength.set("idle time", 10, 2, 300));
+    gui.add(idle.set("idle", false));
     gui.add(bAdd.setup("Add samples"));
     gui.add(bTrain.setup("Train"));
     gui.add(bRunning.setup("Run", false));
@@ -125,9 +127,12 @@ void ofApp::setup() {
     bClear.setup("Clear", 10, 10, 200, 64, 36);
     ofAddListener(AppButton::buttonClickedEvent, this, &ofApp::clearButtonClicked);
 
-    // initializ
+    // initialize
     setupAudio();
-//    load();
+    //    load();
+    idleScreen.load(ofToDataPath("DoodleTunesSplash.jpg"));
+    idleScreen.resize(ofGetWidth(), ofGetHeight());
+    idle.set(true);
 }
 
 //--------------------------------------------------------------
@@ -225,6 +230,18 @@ void ofApp::update(){
     if (toUpdateSound) {
         toUpdateSound = false;
         updateAudio();
+    }
+    
+    // idle screen
+    checkIdle();
+}
+
+//--------------------------------------------------------------
+void ofApp::checkIdle(){
+    float t = ofGetElapsedTimef();
+    if (t - idleTime > idleLength) {
+        idle = true;
+        idleTime = ofGetElapsedTimef();
     }
 }
 
@@ -374,7 +391,9 @@ void ofApp::updateAudio(){
 //--------------------------------------------------------------
 void ofApp::draw(){
     ofBackground(70);
-    if (debug) {
+    if (idle) {
+        idleScreen.draw(0, 0);
+    } else if (debug) {
         drawDebug();
     } else {
         drawPresent();
@@ -784,6 +803,10 @@ void ofApp::mousePressed(int x, int y, int button){
 //--------------------------------------------------------------
 void ofApp::mouseReleased(int x, int y, int button){
     if (debug) return;
+    if (idle) {
+        idle.set(false);
+        idleTime = ofGetElapsedTimef();
+    }
     drawer.mouseReleased(x, y);
     bClear.mouseReleased(x, y);
 }
