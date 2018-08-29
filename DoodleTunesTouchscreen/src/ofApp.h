@@ -45,6 +45,7 @@ public:
     void updateCv();
     void updateAudio();
     void checkIdle();
+    void goIdle();
     
     void draw();
     void drawDebug();

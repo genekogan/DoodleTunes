@@ -95,7 +95,7 @@ void ofApp::setup() {
     gui.add(trainingLabel.set("Training Label", 0, 0, classNames.size()-1));
     gui.add(nAugment.set("augment N", 4, 0, 10));
     gui.add(maxAng.set("augmentation maxAng", 20, 0, 45));
-    gui.add(idleLength.set("idle time", 10, 2, 300));
+    gui.add(idleLength.set("idle time", 30, 2, 300));
     gui.add(idle.set("idle", false));
     gui.add(bAdd.setup("Add samples"));
     gui.add(bTrain.setup("Train"));
@@ -128,12 +128,14 @@ void ofApp::setup() {
     bClear.setup("Clear", 10, 10, 200, 64, 36);
     ofAddListener(AppButton::buttonClickedEvent, this, &ofApp::clearButtonClicked);
 
+    // idle screen
+    idleScreen.load(ofToDataPath("DoodleTunesSplash.jpg"));
+    idleScreen.resize(ofGetScreenWidth(), ofGetScreenHeight());
+    idle.set(true);
+
     // initialize
     setupAudio();
-    //    load();
-    idleScreen.load(ofToDataPath("DoodleTunesSplash.jpg"));
-    idleScreen.resize(ofGetWidth(), ofGetHeight());
-    idle.set(true);
+    load();
 }
 
 //--------------------------------------------------------------
@@ -241,9 +243,15 @@ void ofApp::update(){
 void ofApp::checkIdle(){
     float t = ofGetElapsedTimef();
     if (t - idleTime > idleLength) {
-        idle = true;
+        goIdle();
         idleTime = ofGetElapsedTimef();
     }
+}
+
+//--------------------------------------------------------------
+void ofApp::goIdle(){
+    idle.set(true);
+    clearDrawer();
 }
 
 //--------------------------------------------------------------
@@ -777,6 +785,7 @@ void ofApp::keyReleased(int key){
 //--------------------------------------------------------------
 void ofApp::mouseMoved(int x, int y){
     bClear.mouseMoved(x, y);
+    idleTime = ofGetElapsedTimef();
 }
 
 //--------------------------------------------------------------
@@ -806,7 +815,6 @@ void ofApp::mouseReleased(int x, int y, int button){
     if (debug) return;
     if (idle) {
         idle.set(false);
-        idleTime = ofGetElapsedTimef();
     }
     drawer.mouseReleased(x, y);
     bClear.mouseReleased(x, y);
