@@ -95,7 +95,7 @@ void ofApp::setup() {
     gui.add(trainingLabel.set("Training Label", 0, 0, classNames.size()-1));
     gui.add(nAugment.set("augment N", 4, 0, 10));
     gui.add(maxAng.set("augmentation maxAng", 20, 0, 45));
-    gui.add(idleLength.set("idle time", 30, 2, 300));
+    gui.add(idleLength.set("idle time", 30, 2, 300));bi
     gui.add(idle.set("idle", false));
     gui.add(bAdd.setup("Add samples"));
     gui.add(bTrain.setup("Train"));

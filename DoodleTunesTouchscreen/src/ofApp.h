@@ -36,7 +36,6 @@ using namespace cv;
 class ofApp : public ofBaseApp
 {
 public:
-
     void setup();
     void setupAudio();
     void exit();
